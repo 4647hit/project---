@@ -7,10 +7,10 @@ void OnMessage(const RPC::BaseConnection::ptr &conn, RPC::BaseMessage::ptr &msg)
 {
     DLOG("开始处理消息");
     std::string body = msg->serialize();
-    std::cout << body << std::endl;
-    
+    std::cout << "body content: " << body << std::endl;
+
     auto rsp_t = RPC::MessageFactory::create<RPC::RpcResponse>();
-    rsp_t->setId("37198");
+    rsp_t->setId("10");
     rsp_t->setMtype(Mtype::RSP_RPC);
     rsp_t->setRCode(RCode::RCODE_OK);
     rsp_t->setResult("217390");

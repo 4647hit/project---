@@ -86,7 +86,7 @@ namespace RPC
             int32_t idlen = buf->readInt32();
 
             std::string id = buf->retrieveAsString(idlen);
-            int32_t body_len = len - mTypeFieldslength - IdFieldslength - idlen;
+            int32_t body_len = len - mTypeFieldslength - IdlenFieldslength - idlen;
             std::string body = buf->retrieveAsString(body_len);
 
             msg = MessageFactory::create((Mtype)mtype);
@@ -95,6 +95,8 @@ namespace RPC
                 ELOG("消息解析失败")
                 return false;
             }
+            DLOG("body - msg:");
+            std::cout << body << std::endl;
             bool ret = msg->unserialize(body);
             if (ret == false)
             {
@@ -112,16 +114,16 @@ namespace RPC
             std::string id = ptr->id();
 
             auto mtype = htonl((int32_t)ptr->mtype());
-            int32_t mtypelen = htonl(mTypeFieldslength);
-            int32_t Idlen = htonl(IdFieldslength);
+            //int32_t mtypelen = htonl(mTypeFieldslength);
+            int32_t Idlen = htonl(id.size());
 
             std::string result;
-            int32_t total_len = mTypeFieldslength + IdFieldslength + body.size() + id.size();
+            int32_t total_len = mTypeFieldslength + IdlenFieldslength + body.size() + id.size();
             result.reserve(total_len + lenFieldslength); //?
             int32_t n_total_len = htonl(total_len);
             result.append((char *)&n_total_len, lenFieldslength);
             result.append((char *)&mtype, mTypeFieldslength);
-            result.append((char *)&Idlen, IdFieldslength);
+            result.append((char *)&Idlen, IdlenFieldslength);
             result.append(id);
             result.append(body);
 
@@ -131,7 +133,7 @@ namespace RPC
     private:
         const size_t lenFieldslength = 4;
         const size_t mTypeFieldslength = 4;
-        const size_t IdFieldslength = 4;
+        const size_t IdlenFieldslength = 4;
     };
     class LVProtovolFactory
     {
@@ -152,6 +154,7 @@ namespace RPC
         virtual void send(const BaseMessage::ptr &msg) override
         {
             std::string message = _protocol->serialize(msg);
+            //std::cout << "message : " << message << std::endl;
             if (message.size())
             {
                 _conn->send(message);
@@ -203,9 +206,9 @@ namespace RPC
                 auto bcon = MuduoConnectionFactory::create(_protocol, conn);
                 {
                     std::unique_lock<std::mutex>(_mutex);
-                    //ILOG("---------------------------------------------------------");
+                    // ILOG("---------------------------------------------------------");
                     _conn.insert(std::make_pair(conn, bcon));
-                    //ILOG("---------------------------------------------------------");
+                    // ILOG("---------------------------------------------------------");
                 }
                 if (_cb_connection)
                 {
@@ -238,10 +241,10 @@ namespace RPC
 
             while (1)
             {
-                //ILOG("---------------------------------------------------------");
+                // ILOG("---------------------------------------------------------");
                 if (_protocol->canProcessed(_buf) == false)
                 {
-                    //ILOG("---------------------------------------------------------");
+                    // ILOG("---------------------------------------------------------");
                     if (_buf->readablesize() > maxDatasize)
                     {
                         ELOG("数据量过大")
@@ -251,9 +254,10 @@ namespace RPC
                 }
 
                 BaseMessage::ptr msg;
-                //ILOG("---------------------------------------------------------");
+                // ILOG("---------------------------------------------------------");
                 bool ret = _protocol->OnMessage(_buf, msg);
-                //ILOG("---------------------------------------------------------");
+
+                // ILOG("---------------------------------------------------------");
                 if (ret == false)
                 {
                     conn->shutdown();
@@ -271,7 +275,7 @@ namespace RPC
 
                 if (_cb_message)
                 {
-                    //ILOG("---------------------------------------------------------");
+                    // ILOG("---------------------------------------------------------");
                     _cb_message(base, msg);
                 }
             }
@@ -309,12 +313,11 @@ namespace RPC
             _client.setConnectionCallback(std::bind(&MuduoClient::onConnection, this, std::placeholders::_1));
             _client.setMessageCallback(std::bind(&MuduoClient::onMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
             _client.connect();
-            ILOG("lianjiejianli");
             _downlatch.wait();
         }
         virtual void shutdown()
         {
-            ILOG("gunabilianjie");
+            ILOG("连接关闭");
             _client.disconnect();
         }
         virtual bool send(const BaseMessage::ptr &val) override
@@ -324,7 +327,9 @@ namespace RPC
                 ELOG("连接已关闭")
                 return false;
             }
+            // DLOG("msg : -------------------");
             _conn->send(val);
+            // DLOG("msg : -------------------");
             return true;
         }
         virtual BaseConnection::ptr connection() override
@@ -367,7 +372,10 @@ namespace RPC
                     break;
                 }
                 BaseMessage::ptr msg;
-                bool ret = _protocol->OnMessage(_buf, msg);
+                // 调用下面这个接口后消息直接没有了
+                DLOG("jingrudiaoyongqu");
+                bool ret = _protocol->OnMessage(_buf, msg); // 调用后出现问题
+                DLOG("body content %s", msg->serialize().c_str());
                 if (ret == false)
                 {
                     conn->shutdown();

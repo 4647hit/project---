@@ -3,9 +3,9 @@ LFLAG= -L ../../build/release-install-cpp11/lib/ -lmuduo_net -lmuduo_base -lpthr
 all:server client
 
 server:test_server.cpp
-	g++ $(CFLAG) -o $@ $^  $(LFLAG)
+	g++ $(CFLAG) -g -o $@ $^  $(LFLAG)
 client:test_client.cpp
-	g++ $(CFLAG) -o $@ $^  $(LFLAG)
+	g++ $(CFLAG) -g -o $@ $^  $(LFLAG)
 .PHONY:clean
 clean:
 	rm -rf server client

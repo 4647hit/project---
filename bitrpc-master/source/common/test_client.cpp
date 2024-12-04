@@ -6,7 +6,7 @@
 void OnMessage(const RPC::BaseConnection::ptr &conn, RPC::BaseMessage::ptr &msg)
 {
     std::string body = msg->serialize();
-    std::cout << body << std::endl;
+    std::cout << "body content : "<<body << std::endl;
 }
 int main()
 {
@@ -16,7 +16,7 @@ int main()
 
     req->connect();
     auto rsp_t = RPC::MessageFactory::create<RPC::RpcRequest>();
-    rsp_t->setId("37198");
+    rsp_t->setId("100000");
     rsp_t->setMtype(Mtype::REQ_RPC);
     rsp_t->setMethod("add");
     Json::Value param;
@@ -24,7 +24,7 @@ int main()
     param["num2"] = 22;
     rsp_t->setParams(param);
     req->send(rsp_t);
-    sleep(3);
+    sleep(10);
     req->shutdown();
     return 0;
 }
