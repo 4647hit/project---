@@ -1,3 +1,4 @@
+#pragma once
 #include <muduo/net/TcpServer.h>
 #include <muduo/net/EventLoop.h>
 #include <muduo/net/TcpConnection.h>
@@ -95,8 +96,6 @@ namespace RPC
                 ELOG("消息解析失败")
                 return false;
             }
-            DLOG("body - msg:");
-            std::cout << body << std::endl;
             bool ret = msg->unserialize(body);
             if (ret == false)
             {
@@ -373,7 +372,6 @@ namespace RPC
                 }
                 BaseMessage::ptr msg;
                 // 调用下面这个接口后消息直接没有了
-                DLOG("jingrudiaoyongqu");
                 bool ret = _protocol->OnMessage(_buf, msg); // 调用后出现问题
                 DLOG("body content %s", msg->serialize().c_str());
                 if (ret == false)

@@ -77,5 +77,6 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "*.ipp": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "/home/rooter/coding/project---/bitrpc-master/third/muduo-master"
 }
