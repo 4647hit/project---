@@ -20,19 +20,19 @@
 //     std::cout << msg->serialize() << std::endl;
 // }
 
-void OnRpcresponse(const RPC::BaseConnection::ptr &conn, RPC::RpcResponse::ptr &msg)
-{
-    DLOG("开始处理消息");
-    std::string body = msg->serialize();
-    std::cout << "body content: " << body << std::endl;
+// void OnRpcresponse(const RPC::BaseConnection::ptr &conn, RPC::RpcResponse::ptr &msg)
+// {
+//     DLOG("开始处理消息");
+//     std::string body = msg->serialize();
+//     std::cout << "body content: " << body << std::endl;
 
-}
-void OnTopicresponse(const RPC::BaseConnection::ptr &conn, RPC::TopicResponse::ptr &msg)
-{
-    DLOG("开始处理消息");
-    std::string body = msg->serialize();
-    std::cout << "body content: " << body << std::endl;
-}
+// }
+// void OnTopicresponse(const RPC::BaseConnection::ptr &conn, RPC::TopicResponse::ptr &msg)
+// {
+//     DLOG("开始处理消息");
+//     std::string body = msg->serialize();
+//     std::cout << "body content: " << body << std::endl;
+// }
 int main()
 {
     auto dispather = std::make_shared<Dispather>();
