@@ -86,5 +86,6 @@
         "socket": "cpp",
         "timer": "cpp"
     },
-    "cmake.sourceDirectory": "/home/rooter/coding/project---/bitrpc-master/third/muduo-master"
+    "cmake.sourceDirectory": "/home/rooter/coding/project---/bitrpc-master/third/muduo-master",
+    "C_Cpp.errorSquiggles": "enabled"
 }

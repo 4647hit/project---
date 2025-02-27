@@ -105,7 +105,7 @@ namespace RPC
             {
                 _cb = cb;
             }
-            void Setparams(const std::string &name, Valuetype &vtype)
+            void Setparams(const std::string &name, Valuetype vtype)
             {
                 param_des.push_back(ServerDescribe::param(name, vtype));
             }
@@ -164,6 +164,7 @@ namespace RPC
             RpcRouter() : server_manger(std::make_shared<ServerManager>())
             {
             }
+            //
             void OnRpcRequest(const BaseConnection::ptr &conn, RPC::RpcRequest::ptr &request)
             {
                 // 检查是否存在服务

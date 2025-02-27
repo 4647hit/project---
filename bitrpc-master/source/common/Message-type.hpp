@@ -33,7 +33,8 @@ namespace RPC
         RCODE_INVALID_PARAMS,
         RCODE_NOT_FOUND_SERVICE,
         RCODE_INVAILD_OPTYPE,
-        RCODE_NOT_FOUND_TOPIC
+        RCODE_NOT_FOUND_TOPIC,
+        RCODE_INTERNAL_ERROR
     };
     static std::string Rcode_Reson(RCode code)
     {
@@ -46,6 +47,7 @@ namespace RPC
             {RCode::RCODE_NOT_FOUND_SERVICE,"没有找到对应的服务"},
             {RCode::RCODE_INVAILD_OPTYPE,"无效的操作类型"},
             {RCode::RCODE_NOT_FOUND_TOPIC,"没有找到对应的主题"},
+            {RCode::RCODE_INTERNAL_ERROR,"内部错误"}
         };
         auto it = errR.find(code);
         if(it == errR.end())
