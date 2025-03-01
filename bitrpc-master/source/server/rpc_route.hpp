@@ -22,7 +22,8 @@ namespace RPC
             using ptr = std::shared_ptr<ServerDescribe>;
             using ServiceCallback = std::function<void(const Json::Value &, Json::Value &)>;
             using param = std::pair<std::string, Valuetype>;
-            ServerDescribe(Valuetype &&rtype, std::string &&mname, ServiceCallback &&callback, std::vector<param> &&desc) : _return_value(std::move(rtype)), method_name(std::move(mname)), _cb(std::move(callback)), param_des(std::move(desc))
+            ServerDescribe(Valuetype &&rtype, std::string &&mname, ServiceCallback &&callback, std::vector<param> &&desc) : _return_value(std::move(rtype)),
+             method_name(std::move(mname)), _cb(std::move(callback)), param_des(std::move(desc))
             {
             }
             bool checkparam(const Json::Value &params)
@@ -40,13 +41,14 @@ namespace RPC
                         return false;
                     }
                 }
+                return true;
             }
-            bool call(const Json::Value params, Json::Value result)
+            bool call(const Json::Value& params, Json::Value& result)
             {
                 _cb(params, result);
                 if (rtypecheck(result) == false)
                 {
-                    ELOG("回调函中的类型校验失败");
+                    ELOG("回调函数中的类型校验失败");
                     return false;
                 }
                 return true;
@@ -75,7 +77,7 @@ namespace RPC
                 case Valuetype::ARRAY:
                     return val.isArray();
                 case Valuetype::FLOAT:
-                    return val.isDouble();
+                    return val.isNumeric();
                 case Valuetype::INT:
                     return val.isIntegral();
                 case Valuetype::OBJECT:
@@ -85,6 +87,7 @@ namespace RPC
                 default:
                     break;
                 }
+                return false;
             }
         };
         // 建造者模式
@@ -111,7 +114,7 @@ namespace RPC
             }
             ServerDescribe::ptr build()
             {
-                return std::make_shared<ServerDescribe>(_return_value, method_name, _cb, param_des);
+                return std::make_shared<ServerDescribe>(std::move(_return_value), std::move(method_name),std::move( _cb), std::move(param_des));
             }
 
         private:
@@ -152,7 +155,7 @@ namespace RPC
             std::mutex _mutex;
             std::unordered_map<std::string, ServerDescribe::ptr> _services;
         };
-        class SDescribeFactory // 工厂
+        class ServerDescribeFactory // 工厂
         {
         public:
             static ServerDescribe::ptr create();
@@ -199,7 +202,7 @@ namespace RPC
             {
                 auto msg = MessageFactory::create<RpcResponse>();
                 msg->setId(request->id());
-                msg->setMtype(request->mtype());
+                msg->setMtype(Mtype::RSP_RPC);
                 msg->setRCode(rcode);
                 msg->setResult(res);
                 conn->send(msg);

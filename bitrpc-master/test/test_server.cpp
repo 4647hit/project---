@@ -1,10 +1,11 @@
-#include "net.hpp"
-#include "Log.hpp"
-#include "abstract.hpp"
-#include "Message-type.hpp"
-#include "Dispather.hpp"
+
+#include "../source/common/Log.hpp"
+#include "../source/common/net.hpp"
+#include "../source/common/abstract.hpp"
+#include "../source/common/Message-type.hpp"
+#include "../source/common/Dispather.hpp"
 #include <iostream>
-#include "../server/rpc_route.hpp"
+#include "../source/server/rpc_route.hpp"
 // void OnMessage(const RPC::BaseConnection::ptr &conn, RPC::BaseMessage::ptr &msg)
 // {
 //     DLOG("开始处理消息");
@@ -45,7 +46,7 @@ void Add(const Json::Value &req, Json::Value &rsp)
     int num1 = req["num1"].asInt();
     int num2 = req["num2"].asInt();
     int result = num1 + num2;
-    rsp["result"] = result;
+    rsp = result;
 }
 int main()
 {

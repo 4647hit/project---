@@ -1,3 +1,4 @@
+#pragma once
 #include "../common/Log.hpp"
 #include "../common/message.hpp"
 #include "../common/abstract.hpp"
@@ -65,6 +66,7 @@ namespace RPC
                     ELOG("构造请求描述对象失败");
                     return false;
                 }
+                conn->send(req);
                 async_rsp = rdp->Asyncresponse();
                 return true;
             }
@@ -72,7 +74,6 @@ namespace RPC
             {
                 AsyncResponse rsp_future;
                 if (send(conn, req, rsp_future) == false)
-                    ;
                 {
                     return false;
                 }
@@ -81,13 +82,18 @@ namespace RPC
             }
             bool send(const BaseConnection::ptr &conn, const BaseMessage::ptr &req, RequestCallback &cb)
             {
+
                 RequestDescribe::ptr rdp = newDescribe(req, RType::REQ_CALLBACK);
+                DLOG("=======================");
                 if (rdp.get() == nullptr)
                 {
                     ELOG("构造请求描述对象失败");
                     return false;
                 }
-                rdp->rb(req);
+                conn->send(req);
+                DLOG("=======================");
+                //rdp->rb(req);
+                DLOG("=======================");
                 return true;
             }
 

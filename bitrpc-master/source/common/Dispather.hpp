@@ -41,6 +41,7 @@ namespace RPC
         {
             std::unique_lock<std::mutex> lock(_mutex);
             auto it = std::make_shared<CallbackT<T>>(handle);
+            DLOG("register handle success %d",(int)type);
             _handle.insert(std::make_pair(type, it));
         }
         void OnMessage(const BaseConnection::ptr &conn, BaseMessage::ptr &msg)
@@ -49,6 +50,7 @@ namespace RPC
             auto it = _handle.find(msg->mtype());
             if (it != _handle.end())
             {
+                //DLOG("===============================");
                 return it->second->onMessage(conn, msg);
             }
             else

@@ -1,10 +1,12 @@
-#include "net.hpp"
-#include "Log.hpp"
-#include "abstract.hpp"
+
+#include "../source/common/Log.hpp"
+#include "../source/common/net.hpp"
+#include "../source/common/abstract.hpp"
+#include "../source/common/Message-type.hpp"
 #include <iostream>
-#include "../client/request.hpp"
-#include "Dispather.hpp"
-#include "../client/rpc-caller.hpp"
+#include "../source/client/request.hpp"
+#include "../source/common/Dispather.hpp"
+#include "../source/client/rpc-caller.hpp"
 // void OnMessage(const RPC::BaseConnection::ptr &conn, RPC::BaseMessage::ptr &msg)
 // {
 //     std::string body = msg->serialize();
@@ -35,50 +37,69 @@
 //     std::string body = msg->serialize();
 //     std::cout << "body content: " << body << std::endl;
 // }
+void callback(const Json::Value &res)
+{
+  std::cout << "result : " << res.asInt() << std::endl;
+}
 int main()
 {
-    auto requestor = std::make_shared<RPC::Client::Requestor>();
-    auto RpcCaller = std::make_shared<RPC::Client::RpcCaller>(requestor);
+  auto requestor = std::make_shared<RPC::Client::Requestor>();
+  auto RpcCaller = std::make_shared<RPC::Client::RpcCaller>(requestor);
 
-    auto dispather = std::make_shared<Dispather>();
+  auto dispather = std::make_shared<Dispather>();
 
-    auto req = RPC::ClientFactory::create("127.0.0.1", 9090);
-    auto rsp_cb = std::bind(&Client::Requestor::onResponse,requestor.get(),std::placeholders::_1,std::placeholders::_2);
-    dispather->registerhandle<RPC::RpcResponse> (Mtype::RSP_RPC, rsp_cb);
-    auto message_cb = std::bind(&Dispather::OnMessage, dispather.get(), std::placeholders::_1, std::placeholders::_2);
-    req->setMessageCallBack(message_cb);
-    req->connect();
+  auto req = RPC::ClientFactory::create("127.0.0.1", 9090);
+  auto rsp_cb = std::bind(&Client::Requestor::onResponse, requestor.get(), std::placeholders::_1, std::placeholders::_2);
+  dispather->registerhandle<RPC::BaseMessage>(Mtype::RSP_RPC, rsp_cb);
+  auto message_cb = std::bind(&Dispather::OnMessage, dispather.get(), std::placeholders::_1, std::placeholders::_2);
+  req->setMessageCallBack(message_cb);
+  req->connect();
 
-    auto it = req->connection();
-    Json::Value params, result;
-    params["num1"] = 11;
-    params["num2"] = 22;
-    bool ret = RpcCaller->call(it,"Add",params,result);
-    if(ret != false)
-    {
-      std::cout << "result : " << result.asInt() << std::endl;
-    }
-    req->shutdown();
-    // std::cout << "发出请求  --- 2" << std::endl;
-    // auto rsp_t1 = RPC::MessageFactory::create<RPC::RpcRequest>();
-    // rsp_t1->setId("32000");
-    // rsp_t1->setMtype(Mtype::REQ_RPC);
-    // rsp_t1->setMethod("delete");
-    // Json::Value param;
-    // param["num1"] = 1;
-    // param["num2"] = 2;
-    // rsp_t1->setParams(param);
-    // req->send(rsp_t1);
-    // std::cout << "发出请求  --- 1" << std::endl;
-    // auto rsp_t = RPC::MessageFactory::create<RPC::TopicRequest>();
-    // rsp_t->setId("5000");
-    // rsp_t->setMtype(Mtype::REQ_TOPIC);
-    // rsp_t->setTopictype(TopicOptype::TOPIC_CREATE);
-    // rsp_t->setTopicMsg("this is a news");
-    // req->send(rsp_t);
+  auto it = req->connection();
+  Json::Value params, result;
+  // params["num1"] = 11;
+  // params["num2"] = 22;
+  // bool ret = RpcCaller->call(it, "Add", params, result); // ？？？？？？？？？发送流程
+  // if (ret != false)
+  // {
+  //   std::cout << "result : " << result.asInt() << std::endl;
+  // }
 
+  Client::RpcCaller::JsonAsyncResponse result1;
+  params["num1"] = 22;
+  params["num2"] = 33;
+  bool ret = RpcCaller->call(it, "Add", params, result1); // ？？？？？？？？？发送流程
+  if (ret != false)
+  {
+    DLOG("=======================");
+    result = result1.get();
+    std::cout << "result : " << result.asInt() << std::endl;
+  }
 
-    // sleep(10);
-    // req->shutdown();
-    return 0;
+  params["num1"] = 44;
+  params["num2"] = 14;
+  ret = RpcCaller->call(it, "Add", params, callback); // ？？？？？？？？？发送流程
+  req->shutdown();
+  // 大致流程 client->dispather-> RpcRouter->调用接口->阻塞在onresponse等待结果->requestor->调用接口->寻找对应信息的描述->找到后将对应的描述信息设置回去->唤醒call函数回调
+  //  std::cout << "发出请求  --- 2" << std::endl;
+  // auto rsp_t1 = RPC::MessageFactory::create<RPC::RpcRequest>();
+  // rsp_t1->setId("32000");
+  // rsp_t1->setMtype(Mtype::REQ_RPC);
+  // rsp_t1->setMethod("delete");
+  // Json::Value param;
+  // param["num1"] = 1;
+  // param["num2"] = 2;
+  // rsp_t1->setParams(param);
+  // req->send(rsp_t1);
+  // std::cout << "发出请求  --- 1" << std::endl;
+  // auto rsp_t = RPC::MessageFactory::create<RPC::TopicRequest>();
+  // rsp_t->setId("5000");
+  // rsp_t->setMtype(Mtype::REQ_TOPIC);
+  // rsp_t->setTopictype(TopicOptype::TOPIC_CREATE);
+  // rsp_t->setTopicMsg("this is a news");
+  // req->send(rsp_t);
+
+  // sleep(10);
+  // req->shutdown();
+  return 0;
 }

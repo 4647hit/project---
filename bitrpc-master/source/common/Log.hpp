@@ -110,7 +110,7 @@ namespace RPC
             // 5、定义一个8字节的序号，逐字节组织成为16进制数字字符的字符串
             static std::atomic<size_t> seq(1);
             size_t cur = seq.fetch_add(1);
-            for (int i = 7; i >= 0; i++)
+            for (int i = 7; i >= 0; i--)
             {
                 if (i == 5)
                     ss << "-";
