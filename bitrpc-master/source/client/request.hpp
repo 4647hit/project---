@@ -82,8 +82,8 @@ namespace RPC
             }
             bool send(const BaseConnection::ptr &conn, const BaseMessage::ptr &req, RequestCallback &cb)
             {
-
-                RequestDescribe::ptr rdp = newDescribe(req, RType::REQ_CALLBACK);
+                
+                RequestDescribe::ptr rdp = newDescribe(req, RType::REQ_CALLBACK, cb);
                 DLOG("=======================");
                 if (rdp.get() == nullptr)
                 {

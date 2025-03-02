@@ -51,21 +51,18 @@ namespace RPC
             bool call(const BaseConnection::ptr &conn, const std::string &method_name, const Json::Value &params, JsonAsyncResponse &result)
             {
                 // 1.设置请求
+                printf("走到这里\n");
                 auto req_message = MessageFactory::create<RpcRequest>();
                 req_message->setId(UUID::uuid());
                 req_message->setMethod(method_name);
                 req_message->setParams(params);
                 req_message->setMtype(Mtype::REQ_RPC);
                 // 2.发送请求
-                DLOG("=======================");
                 auto json_promise = std::make_shared<std::promise<Json::Value>>();
                 result = json_promise->get_future();
-
                 Requestor::RequestCallback cb = std::bind(&RpcCaller::Callback,
                                                           this, std::placeholders::_1, json_promise);
-                DLOG("=======================");
                 bool ret = _RpcCall->send(conn, std::dynamic_pointer_cast<BaseMessage>(req_message), cb);
-                DLOG("=======================");
                 if (!ret)
                 {
                     ELOG("异步发送请求失败");

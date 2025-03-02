@@ -1,4 +1,5 @@
-
+#include <thread>    
+#include <chrono>  
 #include "../source/common/Log.hpp"
 #include "../source/common/net.hpp"
 #include "../source/common/abstract.hpp"
@@ -55,6 +56,9 @@ int main()
   req->setMessageCallBack(message_cb);
   req->connect();
 
+
+
+
   auto it = req->connection();
   Json::Value params, result;
   // params["num1"] = 11;
@@ -79,6 +83,7 @@ int main()
   params["num1"] = 44;
   params["num2"] = 14;
   ret = RpcCaller->call(it, "Add", params, callback); // ？？？？？？？？？发送流程
+  std::this_thread::sleep_for(std::chrono::seconds(1));
   req->shutdown();
   // 大致流程 client->dispather-> RpcRouter->调用接口->阻塞在onresponse等待结果->requestor->调用接口->寻找对应信息的描述->找到后将对应的描述信息设置回去->唤醒call函数回调
   //  std::cout << "发出请求  --- 2" << std::endl;
