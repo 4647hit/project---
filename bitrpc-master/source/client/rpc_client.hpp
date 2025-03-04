@@ -56,7 +56,7 @@ namespace RPC
                 _dispather->registerhandle<BaseMessage>(Mtype::RSP_SERVICE, rsp_cb);
 
                 auto req_cb = std::bind(&Client::Discover::OnServiceRequest, _discover.get(), std::placeholders::_1, std::placeholders::_2);
-                _dispather->registerhandle<ServiceRequest>(Mtype::REQ_SERVICE,req_cb);
+                _dispather->registerhandle<ServiceRequest>(Mtype::REQ_SERVICE,req_cb);//xianzheyang ， 这里存在问题
 
                 auto message_cb = std::bind(&Dispather::OnMessage, _dispather.get(), std::placeholders::_1, std::placeholders::_2);
 
@@ -69,7 +69,6 @@ namespace RPC
             {
                 return _discover->DiscoverService(_client->connection(),method,host);
             }
-
         private:
             Requestor::ptr _request;
             BaseClient::ptr _client;
