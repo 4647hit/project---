@@ -87,5 +87,6 @@
         "timer": "cpp"
     },
     "cmake.sourceDirectory": "/home/rooter/coding/project---/bitrpc-master/third/muduo-master",
-    "C_Cpp.errorSquiggles": "enabled"
+    "C_Cpp.errorSquiggles": "enabled",
+    "liveServer.settings.multiRootWorkspaceName": "project---"
 }

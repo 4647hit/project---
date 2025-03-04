@@ -8,6 +8,7 @@ namespace RPC
 
         class Provider
         {
+        public:
             using ptr = std::shared_ptr<Provider>;
             Provider(Requestor::ptr reqs) : request(reqs)
             {
@@ -89,6 +90,7 @@ namespace RPC
         class Discover
         {
         public:
+            using ptr = std::shared_ptr<Discover>;
             // 准备发现服务,返回提供服务者的ip地址信息
             void DiscoverService(const BaseConnection::ptr &conn, const std::string &method, Address &host)
             {

@@ -75,6 +75,7 @@ namespace RPC
         SERVICE_REGISTRY = 0,
         SERVICE_DISCOVERY,
         SERVICE_ONLINE,
-        SERVICE_OFFLINE
+        SERVICE_OFFLINE,
+        SERVICE_UNKNOW
     };
 }
