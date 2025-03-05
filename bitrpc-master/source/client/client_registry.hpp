@@ -90,9 +90,14 @@ namespace RPC
         class Discover
         {
         public:
+            using OfflineCallback = std::function<void(const Address& host)>;
             using ptr = std::shared_ptr<Discover>;
+            Discover(OfflineCallback& _cb,Requestor::ptr& _request):cb(_cb),request(_request)
+            {
+
+            }
             // 准备发现服务,返回提供服务者的ip地址信息
-            void DiscoverService(const BaseConnection::ptr &conn, const std::string &method, Address &host)
+            bool DiscoverService(const BaseConnection::ptr &conn, const std::string &method, Address &host)
             {
                 {
                     std::unique_lock<std::mutex>(_mutex);
@@ -118,27 +123,27 @@ namespace RPC
                 if (ret == false)
                 {
                     DLOG("请求发送失败");
-                    return;
+                    return false;
                 }
 
                 auto rsp = std::dynamic_pointer_cast<ServiceResponse>(host_rsp);
                 if (rsp.get() == nullptr)
                 {
                     DLOG("指针类型转换失败");
-                    return;
+                    return false;
                 }
 
                 if (rsp->rcode() != RCode::RCODE_OK)
                 {
                     DLOG("注册失败原因，%s", Rcode_Reson(rsp->rcode()));
-                    return;
+                    return false;
                 }
                 // 有新的提供者地址通过响应发送过来了
                 auto host_ptr = std::make_shared<Method_Host>();
                 if (rsp->Host().empty())
                 {
                     DLOG("未有提供者");
-                    return;
+                    return false;
                 }
                 for (auto new_host : rsp->Host())
                 {
@@ -146,9 +151,10 @@ namespace RPC
                 }
                 _methods_host[method] = host_ptr;
                 host = host_ptr->chose_host();
+                return true;
             }
             // 上线或下线服务时，Discover的处理回调；
-            void OnServiceRequest(const BaseConnection &conn, const ServiceRequest::ptr &msg)
+            void OnServiceRequest(const BaseConnection::ptr &conn, const ServiceRequest::ptr &msg)
             {
                 auto service_type = msg->optype();
                 // 上线
@@ -177,10 +183,12 @@ namespace RPC
                     {
                         return;
                     }
+                    cb(msg->Host());
                 }
             }
 
         private:
+            OfflineCallback& cb;
             std::unordered_map<std::string, Method_Host::ptr> _methods_host; // 提供方法对应的主机ip
             std::mutex _mutex;
             Requestor::ptr request;
