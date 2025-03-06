@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/bitrpc-master/build/release-install-cpp11/include",
-                "${workspaceFolder}"
+                "${workspaceFolder}",
+                "${workspaceFolder}/bitrpc-master/build"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
