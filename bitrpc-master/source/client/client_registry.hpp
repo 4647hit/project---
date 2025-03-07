@@ -22,7 +22,7 @@ namespace RPC
                 service_msg->setHost(host);
                 service_msg->setServicetype(ServiceOptype::SERVICE_REGISTRY);
 
-                auto service_rsp = MessageFactory::create<BaseMessage>();
+                BaseMessage::ptr service_rsp;
                 bool ret = request->send(conn, service_msg, service_rsp);
                 if (ret == false)
                 {
@@ -38,7 +38,7 @@ namespace RPC
 
                 if (rsp->rcode() != RCode::RCODE_OK)
                 {
-                    DLOG("注册失败的原因 %s", RPC::Rcode_Reson(rsp->rcode()));
+                    DLOG("注册失败的原因 %s", RPC::Rcode_Reson(rsp->rcode()).c_str());
                     return false;
                 }
                 return true;
@@ -92,7 +92,7 @@ namespace RPC
         public:
             using OfflineCallback = std::function<void(const Address& host)>;
             using ptr = std::shared_ptr<Discover>;
-            Discover(OfflineCallback& _cb,Requestor::ptr& _request):cb(_cb),request(_request)
+            Discover(const OfflineCallback& _cb,Requestor::ptr& _request):cb(_cb),request(_request)
             {
 
             }
@@ -118,7 +118,7 @@ namespace RPC
                 service_msg->setServiceMethod(method);
                 service_msg->setServicetype(ServiceOptype::SERVICE_DISCOVERY);
 
-                auto host_rsp = MessageFactory::create<BaseMessage>();
+                BaseMessage::ptr host_rsp;
                 bool ret = request->send(conn, service_msg, host_rsp);
                 if (ret == false)
                 {
@@ -135,7 +135,7 @@ namespace RPC
 
                 if (rsp->rcode() != RCode::RCODE_OK)
                 {
-                    DLOG("注册失败原因，%s", Rcode_Reson(rsp->rcode()));
+                    DLOG("注册失败原因，%s", Rcode_Reson(rsp->rcode()).c_str());
                     return false;
                 }
                 // 有新的提供者地址通过响应发送过来了
@@ -178,17 +178,17 @@ namespace RPC
                     if (!it->empty())
                     {
                         it->remove_host(msg->Host());
+                        cb(msg->Host());
                     }
                     else
                     {
                         return;
-                    }
-                    cb(msg->Host());
+                    }  
                 }
             }
 
         private:
-            OfflineCallback& cb;
+            OfflineCallback cb;
             std::unordered_map<std::string, Method_Host::ptr> _methods_host; // 提供方法对应的主机ip
             std::mutex _mutex;
             Requestor::ptr request;

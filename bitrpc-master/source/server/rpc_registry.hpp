@@ -17,6 +17,7 @@ namespace RPC
             using ptr = std::shared_ptr<ProviderManager>;
             struct Provider
             {
+                public:
                 using ptr = std::shared_ptr<Provider>;
                 Address host;
                 std::mutex _mutex;
@@ -123,7 +124,7 @@ namespace RPC
                 }
             };
             // 添加发现者信息
-            Discover::ptr addDiscover(const BaseConnection::ptr &conn, const std::string &method)
+            void addDiscover(const BaseConnection::ptr &conn, const std::string &method)
             {
                 Discover::ptr _pro;
                 // 查找原来是否有发现者
@@ -188,7 +189,6 @@ namespace RPC
                 service_msg->setServiceMethod(method);
                 service_msg->setHost(host);
                 service_msg->setServicetype(type);
-                auto &discover_set = it->second;
                 for (auto &its : discover_set)
                 {
                     its->conn->send(service_msg);
@@ -230,7 +230,8 @@ namespace RPC
             void Shutdown(const BaseConnection::ptr &conn)
             {
                 auto it = _proc->getProvider(conn);
-                if (it != ProviderManager::ptr())
+                
+                if (it != ProviderManager::Provider::ptr())
                 {
                     // 有这项服务的提供者，将服务提供者提供下线消息通知发现者
                     for (auto &method : it->methods)

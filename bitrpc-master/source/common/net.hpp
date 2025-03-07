@@ -3,6 +3,8 @@
 #include <muduo/net/EventLoop.h>
 #include <muduo/net/TcpConnection.h>
 #include <muduo/net/TcpClient.h>
+// #include <muduo/base/Logging.h>
+
 #include <iostream>
 #include <muduo/net/Buffer.h>
 #include <muduo/base/CountDownLatch.h>
@@ -113,7 +115,7 @@ namespace RPC
             std::string id = ptr->id();
 
             auto mtype = htonl((int32_t)ptr->mtype());
-            //int32_t mtypelen = htonl(mTypeFieldslength);
+            // int32_t mtypelen = htonl(mTypeFieldslength);
             int32_t Idlen = htonl(id.size());
 
             std::string result;
@@ -153,7 +155,7 @@ namespace RPC
         virtual void send(const BaseMessage::ptr &msg) override
         {
             std::string message = _protocol->serialize(msg);
-            //std::cout << "message : " << message << std::endl;
+            // std::cout << "message : " << message << std::endl;
             if (message.size())
             {
                 _conn->send(message);
@@ -187,11 +189,14 @@ namespace RPC
     public:
         MuduoServer(int port = 9090) : _server(&_baseloop, muduo::net::InetAddress("127.0.0.1", port), "MuduoServer", muduo::net::TcpServer::kReusePort), _protocol(LVProtovolFactory::create())
         {
+            // muduo::Logger::setLogLevel(muduo::Logger::FATAL);
         }
         void start() override
         {
+            DLOG("------------------------------------");
             _server.setConnectionCallback(std::bind(&MuduoServer::onConnection, this, std::placeholders::_1));
             _server.setMessageCallback(std::bind(&MuduoServer::onMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+            DLOG("------------------------------server");
             _server.start();
             _baseloop.loop();
         }
@@ -312,7 +317,7 @@ namespace RPC
             _client.setConnectionCallback(std::bind(&MuduoClient::onConnection, this, std::placeholders::_1));
             _client.setMessageCallback(std::bind(&MuduoClient::onMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
             _client.connect();
-            _downlatch.wait();
+            _downlatch.wait();//阻塞于此
         }
         virtual void shutdown()
         {
