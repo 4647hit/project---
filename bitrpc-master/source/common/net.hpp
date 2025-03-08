@@ -193,10 +193,8 @@ namespace RPC
         }
         void start() override
         {
-            DLOG("------------------------------------");
             _server.setConnectionCallback(std::bind(&MuduoServer::onConnection, this, std::placeholders::_1));
             _server.setMessageCallback(std::bind(&MuduoServer::onMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-            DLOG("------------------------------server");
             _server.start();
             _baseloop.loop();
         }
@@ -245,10 +243,8 @@ namespace RPC
 
             while (1)
             {
-                // ILOG("---------------------------------------------------------");
                 if (_protocol->canProcessed(_buf) == false)
                 {
-                    // ILOG("---------------------------------------------------------");
                     if (_buf->readablesize() > maxDatasize)
                     {
                         ELOG("数据量过大")
@@ -256,30 +252,27 @@ namespace RPC
                     }
                     break;
                 }
-
                 BaseMessage::ptr msg;
-                // ILOG("---------------------------------------------------------");
                 bool ret = _protocol->OnMessage(_buf, msg);
-
-                // ILOG("---------------------------------------------------------");
                 if (ret == false)
                 {
                     conn->shutdown();
                     return;
                 }
                 BaseConnection::ptr base;
-                auto it = _conn.find(conn);
 
-                if (it == _conn.end())
                 {
-                    conn->shutdown();
-                    return;
+                    std::unique_lock<std::mutex>(_mutex);
+                    auto it = _conn.find(conn);
+                    if (it == _conn.end())
+                    {
+                        conn->shutdown();
+                        return;
+                    }
+                    base = it->second;
                 }
-                base = it->second;
-
                 if (_cb_message)
                 {
-                    // ILOG("---------------------------------------------------------");
                     _cb_message(base, msg);
                 }
             }

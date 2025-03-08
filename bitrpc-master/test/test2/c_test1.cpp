@@ -11,11 +11,11 @@ void callback(const Json::Value &res)
 int main()
 {
   RPC::Client::RpcClient client(false, "127.0.0.1", 9090);
-  std::cout << "======================================================" << std::endl;;
   Json::Value params, result;
   params["num1"] = 11;
   params["num2"] = 22;
   bool ret = client.call("Add", params, result); // ？？？？？？？？？发送流程
+  DLOG("---------------");
   if (ret == false)
   {
     std::cout << "调用失败" << std::endl;

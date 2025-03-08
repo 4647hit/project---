@@ -190,6 +190,7 @@ namespace RPC
                     ELOG("内部参数错误");
                     return response(conn, request, Json::Value(), RCode::RCODE_INTERNAL_ERROR);
                 }
+                printf("send response over\n");
                 return response(conn, request, result, RCode::RCODE_OK);
             }
             void registerMethod(const ServerDescribe::ptr &des)
@@ -206,6 +207,7 @@ namespace RPC
                 msg->setRCode(rcode);
                 msg->setResult(res);
                 conn->send(msg);
+
             }
             ServerManager::ptr server_manger;
         };

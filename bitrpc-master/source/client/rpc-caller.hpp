@@ -23,9 +23,10 @@ namespace RPC
                 req_message->setParams(params);
                 req_message->setMtype(Mtype::REQ_RPC);
                 // 2.发送请求
+                DLOG("------------------------------------");
                 BaseMessage::ptr rsp_msg;
-
                 bool ret = _RpcCall->send(conn, std::dynamic_pointer_cast<BaseMessage>(req_message), rsp_msg);
+                DLOG("------------------------------------");
                 if (!ret)
                 {
                     ELOG("发送同步RPC请求失败");

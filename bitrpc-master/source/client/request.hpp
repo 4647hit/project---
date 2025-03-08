@@ -33,6 +33,7 @@ namespace RPC
             };
             void onResponse(const BaseConnection::ptr &conn, const BaseMessage::ptr &msg)
             {
+                printf("get response over!\n");
                 std::string rid = msg->id();
                 RequestDescribe::ptr it = this->getDescribe(rid);
                 if (it == nullptr)
@@ -67,6 +68,7 @@ namespace RPC
                     return false;
                 }
                 conn->send(req);
+                DLOG("------------------------------------");
                 async_rsp = rdp->Asyncresponse();
                 return true;
             }

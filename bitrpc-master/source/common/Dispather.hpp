@@ -46,11 +46,13 @@ namespace RPC
         }
         void OnMessage(const BaseConnection::ptr &conn, BaseMessage::ptr &msg)
         {
+            printf("dispatcher message begin\n");
             std::unique_lock<std::mutex> lock(_mutex);
+            printf("this\n");
             auto it = _handle.find(msg->mtype());
             if (it != _handle.end())
             {
-                //DLOG("===============================");
+                //printf("msg_tyep: %d\n", msg->mtype());
                 return it->second->onMessage(conn, msg);
             }
             else

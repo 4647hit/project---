@@ -54,23 +54,22 @@ namespace RPC
             _router(std::make_shared<RpcRouter>()),
             _dispather(std::make_shared<Dispather>())
             {
-                DLOG("------------------------------------");
-                if(_enableRegistry)
-                {
-                    DLOG("------------------------------------");
-                   _req_client =  std::make_shared<Client::ClientProvider>(
-                    register_center_host.first,register_center_host.second);
-                }
                 auto cb = std::bind(&RPC::Server::RpcRouter::OnRpcRequest,_router.get(),
                 std::placeholders::_1,std::placeholders::_2);
+
                 auto dispather = std::make_shared<Dispather>();
                 dispather->registerhandle<RPC::RpcRequest>(Mtype::REQ_RPC, cb);
+                
                 auto message_cb = std::bind(&Dispather::OnMessage, dispather.get(),
                  std::placeholders::_1, std::placeholders::_2);
                  DLOG("------------------------------------");
                 _server = RPC::ServerFactory::create(host.second);
-                DLOG("------------------------------------");
                 _server->setMessageCallBack(message_cb);
+                if(_enableRegistry)
+                {
+                   _req_client =  std::make_shared<Client::ClientProvider>(
+                    register_center_host.first,register_center_host.second);
+                }
             }
             void Start()
             {

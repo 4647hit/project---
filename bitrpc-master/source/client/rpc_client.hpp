@@ -93,7 +93,7 @@ namespace RPC
                 auto rsp_cb = std::bind(&Client::Requestor::onResponse, _request.get(), std::placeholders::_1, std::placeholders::_2);
                 _dispather->registerhandle<BaseMessage>(Mtype::REQ_RPC, rsp_cb);
                 //如果是发现服务，那么传入的就是注册中心地址，如果不是，传入地址就为的提供者地址
-                DLOG("-------------------------------------------client ");
+
                 if(_enablediscover)
                 {
                     auto offlinecallback = std::bind(&RpcClient::delClient,this,std::placeholders::_1);
@@ -101,22 +101,23 @@ namespace RPC
                 }
                 else
                 {
+                    DLOG("-------------------------------------------client ");
                     auto message_cb = std::bind(&Dispather::OnMessage, _dispather.get(), std::placeholders::_1, std::placeholders::_2);
                     _client = RPC::ClientFactory::create(ip, port);
                     _client->setMessageCallBack(message_cb);
-                    DLOG("-------------------------------------------client ");
                     _client->connect();
-                    DLOG("-------------------------------------------client ");
                 }
             }
             bool call(const std::string &method_name, const Json::Value &params, Json::Value &result)
             {
+                DLOG("------------------------------------");
                 auto ptr = getClient(method_name);
                 if(ptr.get() == nullptr)
                 {
                     DLOG("查询服务端地址失败");
                     return false;
                 }
+                DLOG("------------------------------------");
                 return _caller->call(ptr->connection(),method_name,params,result);
             }
             bool call( const std::string &method_name, const Json::Value &params, RpcCaller::JsonAsyncResponse &result)

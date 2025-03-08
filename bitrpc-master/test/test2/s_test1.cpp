@@ -20,9 +20,8 @@ int main()
     desc_factory->Setparams("num2", RPC::Server::Valuetype::INT);
     desc_factory->SetreturnValue(RPC::Server::Valuetype::INT);
     desc_factory->SetServerCallback(Add);
-    DLOG("------------------------------------");
-    RPC::Server::Route_Server server(Address("127.0.0.1",9090),true,Address("127.0.0.1",8080));
-    DLOG("------------------------------------");
+    RPC::Server::Route_Server server(Address("127.0.0.1",9090));
+
     server.RegisterMethod(desc_factory->build());
     server.Start();
     return 0;
