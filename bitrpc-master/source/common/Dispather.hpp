@@ -20,9 +20,11 @@ namespace RPC
     public:
         using MessageCb = std::function<void(const BaseConnection::ptr &conn, std::shared_ptr<T> &msg)>;
         using ptr = std::shared_ptr<CallbackT<T>>;
+
     public:
         CallbackT(const MessageCb &_cb) : _handle(_cb)
-        {}
+        {
+        }
         void onMessage(const BaseConnection::ptr &conn, BaseMessage::ptr &msg) override
         {
             auto it = std::dynamic_pointer_cast<T>(msg);
@@ -35,24 +37,27 @@ namespace RPC
     class Dispather
     {
     public:
+        Dispather() {
+            printf("初始化\n");
+        }
         using ptr = std::shared_ptr<Dispather>;
         template <typename T>
         void registerhandle(Mtype type, const typename CallbackT<T>::MessageCb &handle)
         {
+            printf("set callback\n");
             std::unique_lock<std::mutex> lock(_mutex);
             auto it = std::make_shared<CallbackT<T>>(handle);
-            DLOG("register handle success %d",(int)type);
+            DLOG("register handle success %d", (int)type);
             _handle.insert(std::make_pair(type, it));
         }
         void OnMessage(const BaseConnection::ptr &conn, BaseMessage::ptr &msg)
         {
             printf("dispatcher message begin\n");
             std::unique_lock<std::mutex> lock(_mutex);
-            printf("this\n");
             auto it = _handle.find(msg->mtype());
             if (it != _handle.end())
             {
-                //printf("msg_tyep: %d\n", msg->mtype());
+                // printf("msg_tyep: %d\n", msg->mtype());
                 return it->second->onMessage(conn, msg);
             }
             else
@@ -64,6 +69,6 @@ namespace RPC
 
     private:
         std::mutex _mutex;
-        std::unordered_map<Mtype,Callback::ptr> _handle;
+        std::unordered_map<Mtype, Callback::ptr> _handle;
     };
 }

@@ -21,7 +21,7 @@ namespace RPC
                 auto message_cb = std::bind(&Dispather::OnMessage, _dispather.get(),
                  std::placeholders::_1, std::placeholders::_2);
              
-                _server = RPC::ServerFactory::create(9090);
+                _server = RPC::ServerFactory::create(port);
                 _server->setMessageCallBack(message_cb);
 
                 auto ncb = std::bind(&RegisterCenter::CloseCallback,this,std::placeholders::_1);
@@ -57,16 +57,17 @@ namespace RPC
                 auto cb = std::bind(&RPC::Server::RpcRouter::OnRpcRequest,_router.get(),
                 std::placeholders::_1,std::placeholders::_2);
 
-                auto dispather = std::make_shared<Dispather>();
-                dispather->registerhandle<RPC::RpcRequest>(Mtype::REQ_RPC, cb);
+                // auto dispather = std::make_shared<Dispather>();
+                _dispather->registerhandle<RPC::RpcRequest>(Mtype::REQ_RPC, cb);
                 
-                auto message_cb = std::bind(&Dispather::OnMessage, dispather.get(),
+                auto message_cb = std::bind(&Dispather::OnMessage, _dispather.get(),
                  std::placeholders::_1, std::placeholders::_2);
                  DLOG("------------------------------------");
                 _server = RPC::ServerFactory::create(host.second);
                 _server->setMessageCallBack(message_cb);
                 if(_enableRegistry)
                 {
+                    printf("enble\n");
                    _req_client =  std::make_shared<Client::ClientProvider>(
                     register_center_host.first,register_center_host.second);
                 }

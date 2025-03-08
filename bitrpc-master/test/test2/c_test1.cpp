@@ -10,12 +10,11 @@ void callback(const Json::Value &res)
 }
 int main()
 {
-  RPC::Client::RpcClient client(false, "127.0.0.1", 9090);
+  RPC::Client::RpcClient client(true, "127.0.0.1", 8080);
   Json::Value params, result;
   params["num1"] = 11;
   params["num2"] = 22;
   bool ret = client.call("Add", params, result); // ？？？？？？？？？发送流程
-  DLOG("---------------");
   if (ret == false)
   {
     std::cout << "调用失败" << std::endl;
@@ -37,12 +36,6 @@ int main()
   params["num2"] = 14;
   ret = client.call("Add", params, callback); // ？？？？？？？？？发送流程
 
-  if (ret != false)
-  {
-    DLOG("=======================");
-    result = result1.get();
-    std::cout << "result : " << result.asInt() << std::endl;
-  }
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
   return 0;

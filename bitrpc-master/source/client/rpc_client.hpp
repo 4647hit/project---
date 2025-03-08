@@ -91,7 +91,7 @@ namespace RPC
                 DLOG("-------------------------------------------client ");
                 //rpc请求对应的回调处理
                 auto rsp_cb = std::bind(&Client::Requestor::onResponse, _request.get(), std::placeholders::_1, std::placeholders::_2);
-                _dispather->registerhandle<BaseMessage>(Mtype::REQ_RPC, rsp_cb);
+                _dispather->registerhandle<BaseMessage>(Mtype::RSP_RPC, rsp_cb);
                 //如果是发现服务，那么传入的就是注册中心地址，如果不是，传入地址就为的提供者地址
 
                 if(_enablediscover)
@@ -101,7 +101,6 @@ namespace RPC
                 }
                 else
                 {
-                    DLOG("-------------------------------------------client ");
                     auto message_cb = std::bind(&Dispather::OnMessage, _dispather.get(), std::placeholders::_1, std::placeholders::_2);
                     _client = RPC::ClientFactory::create(ip, port);
                     _client->setMessageCallBack(message_cb);
@@ -149,6 +148,8 @@ namespace RPC
                 auto message_cb = std::bind(&Dispather::OnMessage, _dispather.get(), std::placeholders::_1, std::placeholders::_2);
                 auto client = RPC::ClientFactory::create(host.first, host.second);
                 client->setMessageCallBack(message_cb);
+                client->connect();
+                addClient(host,client);
                 return client;
             }
             BaseClient::ptr getClient(const Address& host)
@@ -182,8 +183,8 @@ namespace RPC
                     //没有查到服务端直接创建
                     else
                     {
+                        DLOG("创建客户端成功");
                         ptr = NewClient(host);
-                        addClient(host,ptr);
                     }
                 }
                 else
@@ -219,7 +220,7 @@ namespace RPC
             Dispather::ptr _dispather;
             RpcCaller::ptr _caller;
             ClientDiscover::ptr _discover;
-            std::unordered_map<Address, BaseClient::ptr, myhash> _rpc_clients;//以发现的提供者服务客户端
+            std::unordered_map<Address, BaseClient::ptr, myhash> _rpc_clients;//已经发现的提供者服务客户端
         };
     }
 }
