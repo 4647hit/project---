@@ -16,7 +16,59 @@ namespace RPC
         public:
             TopicManager() {}
             using ptr = std::shared_ptr<TopicManager>;
-            void OnTopicRequest(const BaseConnection::ptr &conn, RPC::TopicRequest::ptr &request);
+            void OnTopicRequest(const BaseConnection::ptr &conn, RPC::TopicRequest::ptr &request)
+            {
+                auto type = request->Topictype();
+                bool ret1,ret2;
+                {
+
+                    switch (type)
+                    {
+                    case TopicOptype::TOPIC_CREATE:
+                        TopicCreate(conn, request);
+                        break;
+                    case TopicOptype::TOPIC_REMOVE:
+                        TopicRemove(conn, request);
+                        break;
+                    case TopicOptype::TOPIC_SUBCRIBE:
+                        ret1 = TopicSubscribe(conn, request);
+                        break;
+                    case TopicOptype::TOPIC_CANCEL:
+                        ret2 = TopicCancel(conn, request);
+                        break;
+                    case TopicOptype::TOPIC_PUBLISH:
+                        PublishTopicMessage(request->TopicKey(), request);
+                        break;
+
+                    default:
+                        Response(conn,request,RPC::RCode::RCODE_INVAILD_OPTYPE);
+                        break;
+                    }
+                    if(!ret1)
+                    {
+                        return Response(conn,request,RPC::RCode::RCODE_NOT_FOUND_TOPIC);//存在两种原因
+                    }
+                    if(!ret2)
+                    {
+                        return Response(conn,request,RPC::RCode::RCODE_NOT_FOUND_TOPIC);
+                    }
+                    return Response(conn,request,RPC::RCode::RCODE_OK);
+                }
+            }
+            void OnShutdown(const BaseConnection::ptr &conn)
+            {
+
+            }
+
+        private:
+            void Response(const BaseConnection::ptr &conn, const TopicRequest::ptr &req, RPC::RCode ReturnCode = RPC::RCode::OK)
+            {
+                auto service_msg = MessageFactory::create<TopicResponse>();
+                service_msg->setId(req->id());
+                service_msg->setMtype(Mtype::RSP_TOPIC);
+                service_msg->setRCode(ReturnCode);
+                return conn->send(service_msg);
+            }
 
         private:
             void TopicCreate(const BaseConnection::ptr &conn, RPC::TopicRequest::ptr &request)
@@ -45,7 +97,7 @@ namespace RPC
                         for (auto &subscribers : it->second->_subscribers)
                         {
                             auto it_sub = _sub.find(subscribers);
-                            if(it_sub != _sub.end())
+                            if (it_sub != _sub.end())
                             {
                                 _subscribers.insert(it_sub->second);
                             }
@@ -53,7 +105,7 @@ namespace RPC
                     }
                     _topic.erase(name);
                 }
-                for(auto sub :_subscribers)
+                for (auto sub : _subscribers)
                 {
                     sub->removeTopic(name);
                 }
@@ -71,28 +123,98 @@ namespace RPC
                         DLOG("未找到当前的主题");
                         return false;
                     }
+                    // 插入订阅
                     if (it->second)
                     {
-                        topic->insertSub(conn);
+                        it->second->insertSub(conn);
                     }
                     auto it_sub = _sub.find(conn);
-                    if(it_sub == _sub.end())
+                    if (it_sub == _sub.end())
                     {
                         auto newsub = std::make_shared<Subscriber>(conn);
-                        if(newsub)
+                        if (newsub)
                         {
-                            _sub.insert(std::make_pair(conn,newsub));
+                            newsub->insertTopic(name);
+                            _sub.insert(std::make_pair(conn, newsub));
                         }
                         else
                         {
                             DLOG("构造新订阅者失败");
+                            return false;
                         }
                     }
-
+                    else
+                    {
+                        it_sub->second->insertTopic(name);
+                    }
+                }
+                return true;
+            }
+            bool TopicCancel(const BaseConnection::ptr &conn, RPC::TopicRequest::ptr &request)
+            {
+                Subscriber::ptr _subscriber;
+                std::string name = request->TopicKey();
+                {
+                    std::unique_lock<std::mutex>(_mutex);
+                    auto it = _topic.find(name);
+                    if (it == _topic.end())
+                    {
+                        DLOG("未找到当前的主题");
+                        return false;
+                    }
+                    // 清除订阅
+                    if (it->second)
+                    {
+                        it->second->removeSub(conn);
+                    }
+                    auto it_sub = _sub.find(conn);
+                    if (it_sub == _sub.end())
+                    {
+                        DLOG("数据异常，未找到订阅者的喜爱相关信息");
+                        return false;
+                    }
+                    else
+                    {
+                        it_sub->second->removeTopic(name);
+                    }
+                }
+                return true;
+            }
+            void PublishTopicMessage(const std::string &topic_name, RPC::TopicRequest::ptr &msg)
+            {
+                {
+                    std::unique_lock<std::mutex>(_mutex);
+                    auto topic = _topic.find(topic_name);
+                    if (topic != _topic.end())
+                    {
+                        for (auto it : topic->second->_subscribers)
+                        {
+                            it->send(msg);
+                        }
+                    }
                 }
             }
 
         private:
+            struct Subscriber
+            {
+                using ptr = std::shared_ptr<Subscriber>;
+                Subscriber(const BaseConnection::ptr &conn) : _conn(conn) {}
+                BaseConnection::ptr _conn;
+                std::mutex _mutex;
+                std::set<std::string> _topics; // 已经订阅的主题名单
+
+                void removeTopic(const std::string &topic)
+                {
+                    std::unique_lock<std::mutex>(_mutex);
+                    _topics.erase(topic);
+                }
+                void insertTopic(const std::string &topic)
+                {
+                    std::unique_lock<std::mutex>(_mutex);
+                    _topics.insert(topic);
+                }
+            };
             struct Topic
             {
                 using ptr = std::shared_ptr<Topic>;
@@ -124,30 +246,11 @@ namespace RPC
                     _subscribers.insert(sub);
                 }
             };
-            struct Subscriber
-            {
-                using ptr = std::shared_ptr<Subscriber>;
-                Subscriber(const BaseConnection::ptr &conn) : _conn(conn) {}
-                BaseConnection::ptr _conn;
-                std::mutex _mutex;
-                std::set<std::string> _topics; // 已经订阅的主题名单
-
-                void removeTopic(const std::string &topic)
-                {
-                    std::unique_lock<std::mutex>(_mutex);
-                    _topics.erase(topic);
-                }
-                void insertTopic(const std::string &topic)
-                {
-                    std::unique_lock<std::mutex>(_mutex);
-                    _topics.insert(topic);
-                }
-            };
 
         private:
             std::mutex _mutex;
-            std::unordered_map<std::string, Topic::ptr> _topic;//每个名称对应的服务主题指针
-            std::unordered_map<BaseConnection::ptr, Subscriber::ptr> _sub;//每个连接对应的订阅者信息
+            std::unordered_map<std::string, Topic::ptr> _topic;            // 每个名称对应的服务主题指针
+            std::unordered_map<BaseConnection::ptr, Subscriber::ptr> _sub; // 每个连接对应的订阅者信息
         };
     }
 }
