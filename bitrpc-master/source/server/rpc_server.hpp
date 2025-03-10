@@ -1,9 +1,9 @@
-
-
+#pragma once
 #include "../client/rpc_client.hpp"
 #include "../common/Dispather.hpp"
 #include "rpc_registry.hpp"
 #include "rpc_route.hpp"
+#include "rpc_topic_server.hpp"
 
 namespace RPC
 {
@@ -93,6 +93,41 @@ namespace RPC
             Dispather::ptr _dispather;
             BaseServer::ptr _server;      
         };
+
+
+        class TopicCenter
+        {
+            public:
+            using ptr = std::shared_ptr<TopicCenter>;
+            TopicCenter(int port): _topic_manager(std::make_shared<TopicManager>()),_dispather(std::make_shared<Dispather>())
+            {
+                auto cb = std::bind(&TopicManager::OnTopicRequest, _topic_manager.get(), std::placeholders::_1,std::placeholders::_2);
+                _dispather->registerhandle<RPC::TopicRequest>(Mtype::REQ_TOPIC, cb);
+
+                auto message_cb = std::bind(&Dispather::OnMessage, _dispather.get(),
+                 std::placeholders::_1, std::placeholders::_2);
+             
+                _server = RPC::ServerFactory::create(port);
+                _server->setMessageCallBack(message_cb);
+
+                auto ncb = std::bind(&TopicCenter::CloseCallback,this,std::placeholders::_1);
+                _server->setCloseCallBack(ncb);
+            }
+            void CloseCallback(const BaseConnection::ptr& conn)
+            {
+                return _topic_manager->OnShutdown(conn);
+            }
+            void Start()
+            {
+                _server->start();
+            }
+            private:
+            RPC::Server::TopicManager::ptr _topic_manager;
+            Dispather::ptr _dispather;
+            BaseServer::ptr _server;
+        };
+
+        
     }
     
 }

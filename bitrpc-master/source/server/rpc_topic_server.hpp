@@ -19,9 +19,8 @@ namespace RPC
             void OnTopicRequest(const BaseConnection::ptr &conn, RPC::TopicRequest::ptr &request)
             {
                 auto type = request->Topictype();
-                bool ret1,ret2;
+                bool ret1, ret2;
                 {
-
                     switch (type)
                     {
                     case TopicOptype::TOPIC_CREATE:
@@ -41,23 +40,40 @@ namespace RPC
                         break;
 
                     default:
-                        Response(conn,request,RPC::RCode::RCODE_INVAILD_OPTYPE);
+                        Response(conn, request, RPC::RCode::RCODE_INVAILD_OPTYPE);
                         break;
                     }
-                    if(!ret1)
+                    if (!ret1)
                     {
-                        return Response(conn,request,RPC::RCode::RCODE_NOT_FOUND_TOPIC);//存在两种原因
+                        return Response(conn, request, RPC::RCode::RCODE_NOT_FOUND_TOPIC); // 存在两种原因
                     }
-                    if(!ret2)
+                    if (!ret2)
                     {
-                        return Response(conn,request,RPC::RCode::RCODE_NOT_FOUND_TOPIC);
+                        return Response(conn, request, RPC::RCode::RCODE_NOT_FOUND_TOPIC);
                     }
-                    return Response(conn,request,RPC::RCode::RCODE_OK);
+                    return Response(conn, request, RPC::RCode::RCODE_OK);
                 }
             }
             void OnShutdown(const BaseConnection::ptr &conn)
             {
-
+                // 订阅者关闭连接，与提供者没有关系
+                std::unique_lock<std::mutex>(_mutex);
+                auto it = _sub.find(conn);
+                Subscriber::ptr close_sub;
+                if (it != _sub.end())
+                {
+                    // 可能会出现问题
+                    close_sub = it->second;
+                    for (auto topic : close_sub->_topics)
+                    {
+                        auto tp = _topic.find(topic);
+                        if (tp != _topic.end())
+                        {
+                            tp->second->removeSub(conn);
+                        }
+                    }
+                }
+                _sub.erase(conn);
             }
 
         private:
@@ -103,7 +119,7 @@ namespace RPC
                             }
                         }
                     }
-                    _topic.erase(name);
+                    _topic.erase(name); // 删除当前的主题映射关系
                 }
                 for (auto sub : _subscribers)
                 {
