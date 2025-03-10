@@ -4,12 +4,13 @@
 #include "../common/message.hpp"
 #include "../common/Message-type.hpp"
 #include "../common/abstract.hpp"
+
 #include <mutex>
 #include <set>
 
 namespace RPC
 {
-    namespace server
+    namespace Server
     {
         class TopicManager
         {
@@ -19,7 +20,7 @@ namespace RPC
             void OnTopicRequest(const BaseConnection::ptr &conn, RPC::TopicRequest::ptr &request)
             {
                 auto type = request->Topictype();
-                bool ret1, ret2;
+                bool ret1;
                 {
                     switch (type)
                     {
@@ -31,25 +32,21 @@ namespace RPC
                         break;
                     case TopicOptype::TOPIC_SUBCRIBE:
                         ret1 = TopicSubscribe(conn, request);
+                        if (!ret1)
+                        {
+                            return Response(conn, request, RPC::RCode::RCODE_NOT_FOUND_TOPIC); // 存在两种原因
+                        }
                         break;
                     case TopicOptype::TOPIC_CANCEL:
-                        ret2 = TopicCancel(conn, request);
+                        TopicCancel(conn, request);
                         break;
                     case TopicOptype::TOPIC_PUBLISH:
                         PublishTopicMessage(request->TopicKey(), request);
                         break;
 
                     default:
-                        Response(conn, request, RPC::RCode::RCODE_INVAILD_OPTYPE);
+                        return Response(conn, request, RPC::RCode::RCODE_INVAILD_OPTYPE);
                         break;
-                    }
-                    if (!ret1)
-                    {
-                        return Response(conn, request, RPC::RCode::RCODE_NOT_FOUND_TOPIC); // 存在两种原因
-                    }
-                    if (!ret2)
-                    {
-                        return Response(conn, request, RPC::RCode::RCODE_NOT_FOUND_TOPIC);
                     }
                     return Response(conn, request, RPC::RCode::RCODE_OK);
                 }
@@ -77,7 +74,7 @@ namespace RPC
             }
 
         private:
-            void Response(const BaseConnection::ptr &conn, const TopicRequest::ptr &req, RPC::RCode ReturnCode = RPC::RCode::OK)
+            void Response(const BaseConnection::ptr &conn, const TopicRequest::ptr &req, RPC::RCode ReturnCode = RPC::RCode::RCODE_OK)
             {
                 auto service_msg = MessageFactory::create<TopicResponse>();
                 service_msg->setId(req->id());

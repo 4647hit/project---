@@ -228,7 +228,6 @@ namespace RPC
         {
         public:
             using ptr = std::shared_ptr<TopicClient>;
-            using SubCallBack = std::function<void(const std::string &topic_name, const std::string &msg)>;
 
             TopicClient(const std::string &ip, int port) : _request(std::make_shared<Requestor>()),
                                                            _dispather(std::make_shared<Dispather>()),
@@ -254,7 +253,7 @@ namespace RPC
             {
                 return _topic_mg->TopicRemove(_client->connection(), name);
             }
-            bool Subscribe(const BaseConnection::ptr &conn, const std::string &name, const SubCallBack &cb)
+            bool Subscribe(const std::string &name, const TopicManager::SubCallBack& cb)
             {
                 return _topic_mg->Subscribe(_client->connection(), name, cb);
             }
@@ -266,9 +265,9 @@ namespace RPC
             {
                 return _topic_mg->OnPublishMessage(_client->connection(), name, msg);
             }
-            void Publish(const BaseConnection::ptr &conn, const TopicRequest::ptr &msg)
+            void Publish(const TopicRequest::ptr &msg)
             {
-                return _topic_mg->OnPublish(conn, msg);
+                return _topic_mg->OnPublish(_client->connection(), msg);
             }
             void Shutdown()
             {
@@ -278,8 +277,8 @@ namespace RPC
         private:
         private:
             std::mutex _mutex;
-            TopicManager::ptr _topic_mg;
             Requestor::ptr _request;
+            TopicManager::ptr _topic_mg;
             BaseClient::ptr _client; // 未发现的服务客户端
             Dispather::ptr _dispather;
         };

@@ -33,7 +33,7 @@ namespace RPC
             };
             void onResponse(const BaseConnection::ptr &conn, const BaseMessage::ptr &msg)
             {
-                printf("get response over!\n");
+                //printf("get response over!\n");
                 std::string rid = msg->id();
                 RequestDescribe::ptr it = this->getDescribe(rid);
                 if (it == nullptr)
@@ -93,16 +93,15 @@ namespace RPC
                     return false;
                 }
                 conn->send(req);
-                DLOG("=======================");
-                //rdp->rb(req);
-                DLOG("=======================");
                 return true;
             }
 
         private:
             RequestDescribe::ptr newDescribe(const BaseMessage::ptr &req, RType type, const RequestCallback &callback = RequestCallback())
             {
+                DLOG("--------------------------");
                 std::unique_lock<std::mutex> lock(_mutex);
+                DLOG("--------------------------");
                 RequestDescribe::ptr rd = std::make_shared<RequestDescribe>();
                 rd->rtype = type;
                 rd->request = req;
@@ -128,6 +127,7 @@ namespace RPC
                 std::unique_lock<std::mutex> lock(_mutex);
                 _requestor.erase(rid);
             }
+        private:
             std::mutex _mutex;
             std::unordered_map<std::string, RequestDescribe::ptr> _requestor;
         };
