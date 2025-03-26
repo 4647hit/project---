@@ -52,7 +52,6 @@ namespace RPC
         }
         void OnMessage(const BaseConnection::ptr &conn, BaseMessage::ptr &msg)
         {
-            printf("dispatcher message begin\n");
             std::unique_lock<std::mutex> lock(_mutex);
             auto it = _handle.find(msg->mtype());
             if (it != _handle.end())
@@ -66,7 +65,6 @@ namespace RPC
                 conn->shutdown();
             }
         }
-
     private:
         std::mutex _mutex;
         std::unordered_map<Mtype, Callback::ptr> _handle;
